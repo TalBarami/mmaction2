@@ -139,7 +139,7 @@ class BaseDataset(Dataset, metaclass=ABCMeta):
     def evaluate(self,
                  results,
                  metrics='top_k_accuracy',
-                 metric_options=dict(top_k_accuracy=dict(topk=(1, 5))),
+                 metric_options=dict(top_k_accuracy=dict(topk=(1, 3, 5))),
                  logger=None,
                  **deprecated_kwargs):
         """Perform evaluation for common datasets.

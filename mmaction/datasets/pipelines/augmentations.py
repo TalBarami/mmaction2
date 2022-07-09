@@ -1903,3 +1903,101 @@ class MelSpectrogram:
                     f'n_mels={self.n_mels}, '
                     f'fixed_length={self.fixed_length})')
         return repr_str
+
+@PIPELINES.register_module()
+class Reverse:
+    def __init__(self, reverse_ratio=0.5):
+        self.reverse_ratio = reverse_ratio
+
+    def __call__(self, results):
+        if np.random.rand() > self.reverse_ratio:
+            results['keypoint'] = np.copy(np.flip(results['keypoint'], axis=2))
+        return results
+
+    def __repr__(self):
+        return f'{self.__class__.__name__}(reverse_ratio={self.reverse_ratio})'
+
+@PIPELINES.register_module()
+class Shift:
+    def __init__(self, min_val=-0.5, max_val=0.5):
+        self.min_val = min_val
+        self.max_val = max_val
+
+    def __call__(self, results):
+        kp = results['keypoint']
+        C, T, V, M = kp.shape
+        for m in range(M):
+            intervals = {
+                0: (-0.5 - np.clip(kp[0, :, :, m].min(), -0.5, 1), 0.5 - np.clip(kp[0, :, :, m].max(), -1, 0.5)),
+                1: (-0.5 - np.clip(kp[1, :, :, m].min(), -0.5, 1), 0.5 - np.clip(kp[1, :, :, m].max(), -1, 0.5)),
+            }
+            for a in range(C-1):
+                kp[a, :, :, m] += np.random.uniform(*intervals[a])
+        return results
+
+    def __repr__(self):
+        return f'{self.__class__.__name__}(min_val={self.min_val}, max_val={self.max_val})'
+
+@PIPELINES.register_module()
+class Mirror:
+    def __init__(self, min_val=-0.5, max_val=0.5, mirror_ratio=0.5):
+        self.min_val = min_val
+        self.max_val = max_val
+        self.mirror_ratio = mirror_ratio
+
+    def __call__(self, results):
+        if np.random.rand() > self.mirror_ratio:
+            kp = results['keypoint']
+            kp[0] = -kp[0]
+        return results
+
+    def __repr__(self):
+        return f'{self.__class__.__name__}(min_val={self.min_val}, max_val={self.max_val}, mirror_ratio={self.mirror_ratio})'
+
+@PIPELINES.register_module()
+class Splitter:
+    def __init__(self, sequence_length=200):
+        self.sequence_length = sequence_length
+
+    def __call__(self, results):
+        _, T, _, _ = self.skeleton['keypoint'].shape
+        if T <= self.sequence_length:
+            return results
+
+        s = random.randint(0, T - self.sequence_length)
+        t = s + self.sequence_length
+        results['keypoint'] = results['keypoint'][:, s:t]
+        results['keypoint_score'] = results['keypoint_score'][:, s:t]
+        if 'child_detect' in results.keys():
+            results['child_detect'] = results['child_detect'][s:t]
+        if 'child_ids' in results.keys():
+            results['child_ids'] = results['child_ids'][s:t]
+        return results
+
+    def __repr__(self):
+        return f'{self.__class__.__name__}(sequence_length={self.sequence_length}, min_length={self.min_length})'
+
+# @PIPELINES.register_module()
+# class Splitter:
+#     def __init__(self, sequence_length=200, min_length=60):
+#         self.sequence_length = sequence_length
+#         self.min_length = min_length
+#
+#     def __call__(self, results):
+#         _, T, _, _ = self.skeleton['keypoint'].shape
+#         if T <= self.min_length:
+#             return results
+#
+#         length = random.randint(self.min_length, min(self.sequence_length, T))
+#         s = random.randint(0, T - length)
+#         t = s + length
+#         results['keypoint'] = results['keypoint'][:, s:t]
+#         results['keypoint_score'] = results['keypoint_score'][:, s:t]
+#         if 'child_detect' in results.keys():
+#             results['child_detect'] = results['child_detect'][s:t]
+#         if 'child_ids' in results.keys():
+#             results['child_ids'] = results['child_ids'][s:t]
+#         return results
+#
+#     def __repr__(self):
+#         return f'{self.__class__.__name__}(sequence_length={self.sequence_length}, min_length={self.min_length})'

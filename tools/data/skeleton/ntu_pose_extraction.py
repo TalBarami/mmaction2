@@ -26,8 +26,8 @@ except (ImportError, ModuleNotFoundError):
                       '`init_pose_model` form `mmpose.apis`. These apis are '
                       'required in this script! ')
 
-mmdet_root = ''
-mmpose_root = ''
+mmdet_root = r'E:\mmdetection'
+mmpose_root = 'E:\mmpose'
 
 args = abc.abstractproperty()
 args.det_config = f'{mmdet_root}/configs/faster_rcnn/faster_rcnn_r50_caffe_fpn_mstrain_1x_coco-person.py'  # noqa: E501
@@ -307,7 +307,7 @@ def pose_inference(args, frame_paths, det_results):
     return kp
 
 
-def ntu_pose_extraction(vid, skip_postproc=False):
+def ntu_pose_extraction(vid, skip_postproc=True):
     frame_paths = extract_frame(vid)
     det_results = detection_inference(args, frame_paths)
     if not skip_postproc:

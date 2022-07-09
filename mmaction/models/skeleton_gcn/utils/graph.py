@@ -136,6 +136,8 @@ class Graph:
                               [10, 8], [11, 9], [2, 3], [2, 1], [3, 1], [4, 2],
                               [5, 3], [4, 6], [5, 7]]
             neighbor_link = [(i - 1, j - 1) for (i, j) in neighbor_1base]
+            self.self_link = self_link
+            self.neighbor_link = neighbor_link
             self.edge = self_link + neighbor_link
             self.center = 0
         else:
