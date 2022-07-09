@@ -1,6 +1,7 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import copy as cp
 import pickle
+import random
 
 import numpy as np
 from mmcv.fileio import FileClient
@@ -693,3 +694,60 @@ class PoseNormalize:
         results['keypoint_norm_cfg'] = dict(
             mean=self.mean, min_value=self.min_value, max_value=self.max_value)
         return results
+
+
+@PIPELINES.register_module()
+class ChildDetect:
+    def __call__(self, results):
+        cids = results['child_ids']
+        results['keypoint'] = np.expand_dims([results['keypoint'][cid, i] for i, cid in enumerate(cids)], axis=0)
+        results['keypoint_score'] = np.expand_dims([results['keypoint_score'][cid, i] for i, cid in enumerate(cids)], axis=0)
+        return results
+
+@PIPELINES.register_module()
+class Splitter:
+    def __init__(self, sequence_length=200):
+        self.sequence_length = sequence_length
+
+    def __call__(self, results):
+        _, T, _, _ = self.skeleton['keypoint'].shape
+        if T <= self.sequence_length:
+            return results
+
+        s = random.randint(0, T - self.sequence_length)
+        t = s + self.sequence_length
+        results['keypoint'] = results['keypoint'][:, s:t]
+        results['keypoint_score'] = results['keypoint_score'][:, s:t]
+        if 'child_detect' in results.keys():
+            results['child_detect'] = results['child_detect'][s:t]
+        if 'child_ids' in results.keys():
+            results['child_ids'] = results['child_ids'][s:t]
+        return results
+
+    def __repr__(self):
+        return f'{self.__class__.__name__}(sequence_length={self.sequence_length}, min_length={self.min_length})'
+
+# @PIPELINES.register_module()
+# class Splitter:
+#     def __init__(self, sequence_length=200, min_length=60):
+#         self.sequence_length = sequence_length
+#         self.min_length = min_length
+#
+#     def __call__(self, results):
+#         _, T, _, _ = self.skeleton['keypoint'].shape
+#         if T <= self.min_length:
+#             return results
+#
+#         length = random.randint(self.min_length, min(self.sequence_length, T))
+#         s = random.randint(0, T - length)
+#         t = s + length
+#         results['keypoint'] = results['keypoint'][:, s:t]
+#         results['keypoint_score'] = results['keypoint_score'][:, s:t]
+#         if 'child_detect' in results.keys():
+#             results['child_detect'] = results['child_detect'][s:t]
+#         if 'child_ids' in results.keys():
+#             results['child_ids'] = results['child_ids'][s:t]
+#         return results
+#
+#     def __repr__(self):
+#         return f'{self.__class__.__name__}(sequence_length={self.sequence_length}, min_length={self.min_length})'
