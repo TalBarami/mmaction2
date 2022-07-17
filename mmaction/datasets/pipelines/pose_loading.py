@@ -699,9 +699,11 @@ class PoseNormalize:
 @PIPELINES.register_module()
 class ChildDetect:
     def __call__(self, results):
-        cids = results['child_ids']
-        results['keypoint'] = np.expand_dims([results['keypoint'][cid, i] for i, cid in enumerate(cids)], axis=0)
-        results['keypoint_score'] = np.expand_dims([results['keypoint_score'][cid, i] for i, cid in enumerate(cids)], axis=0)
+        cids = results['child_ids'].astype(int)
+        kp = results['keypoint']
+        kps = results['keypoint_score']
+        results['keypoint'] = np.expand_dims([kp[cid, i] for i, cid in enumerate(cids)], axis=0)
+        results['keypoint_score'] = np.expand_dims([kps[cid, i] for i, cid in enumerate(cids)], axis=0)
         return results
 
 @PIPELINES.register_module()
