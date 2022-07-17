@@ -33,6 +33,7 @@ ann_file = r'D:\datasets\lancet_submission_data\train_dataset\child_detect=True\
 left_kp = [1, 3, 5, 7, 9, 11, 13, 15]
 right_kp = [2, 4, 6, 8, 10, 12, 14, 16]
 train_pipeline = [
+    dict(type='ChildDetect'),
     dict(type='Splitter', sequence_length=200),
     dict(type='UniformSampleFrames', clip_len=48),
     dict(type='PoseDecode'),
@@ -52,6 +53,7 @@ train_pipeline = [
     dict(type='ToTensor', keys=['imgs', 'label'])
 ]
 val_pipeline = [
+    dict(type='ChildDetect'),
     dict(type='Splitter', sequence_length=200),
     dict(type='UniformSampleFrames', clip_len=48, num_clips=1, test_mode=True),
     dict(type='PoseDecode'),
@@ -69,6 +71,7 @@ val_pipeline = [
     dict(type='ToTensor', keys=['imgs'])
 ]
 test_pipeline = [
+    dict(type='ChildDetect'),
     dict(type='Splitter', sequence_length=200),
     dict(type='UniformSampleFrames', clip_len=48, num_clips=10, test_mode=True),
     dict(type='PoseDecode'),
