@@ -712,22 +712,27 @@ class Splitter:
         self.sequence_length = sequence_length
 
     def __call__(self, results):
-        _, T, _, _ = self.skeleton['keypoint'].shape
+        T = results['keypoint'].shape[1]
+        if T <= 0:
+            raise ValueError(f'T shouldn\'t be <= 0, yet is {T}')
         if T <= self.sequence_length:
             return results
-
+        out = results.copy()
         s = random.randint(0, T - self.sequence_length)
         t = s + self.sequence_length
-        results['keypoint'] = results['keypoint'][:, s:t]
-        results['keypoint_score'] = results['keypoint_score'][:, s:t]
+        out['keypoint'] = results['keypoint'][:, s:t]
+        out['keypoint_score'] = results['keypoint_score'][:, s:t]
+        out['total_frames'] = self.sequence_length
         if 'child_detect' in results.keys():
-            results['child_detect'] = results['child_detect'][s:t]
+            out['child_detect'] = results['child_detect'][s:t]
         if 'child_ids' in results.keys():
-            results['child_ids'] = results['child_ids'][s:t]
-        return results
+            out['child_ids'] = results['child_ids'][s:t]
+        if t-s <= 0:
+            raise ValueError(f't-s shouldn\'t be <= 0, yet is {t-s}')
+        return out
 
     def __repr__(self):
-        return f'{self.__class__.__name__}(sequence_length={self.sequence_length}, min_length={self.min_length})'
+        return f'{self.__class__.__name__}(sequence_length={self.sequence_length}'
 
 # @PIPELINES.register_module()
 # class Splitter:
