@@ -29,7 +29,7 @@ model = dict(
     test_cfg=dict(average_clips='prob'))
 
 dataset_type = 'PoseDataset'
-ann_file = r'D:\datasets\lancet_submission_data\train_dataset\child_detect=True\dataset_splits.pkl'
+ann_file = r'D:\data\lancet_submission\dataset_splits.pkl'
 left_kp = [1, 3, 5, 7, 9, 11, 13, 15]
 right_kp = [2, 4, 6, 8, 10, 12, 14, 16]
 train_pipeline = [
@@ -134,7 +134,7 @@ log_config = dict(
     ])
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
-work_dir = './work_dirs/posec3d_autism_center_binary_weighted_lancet_detect'  # noqa: E501
+work_dir = './work_dirs/binary_child_detect'  # noqa: E501
 load_from = 'https://download.openmmlab.com/mmaction/skeleton/posec3d/k400_posec3d-041f49c6.pth'  # noqa: E501
 resume_from = None
 find_unused_parameters = True

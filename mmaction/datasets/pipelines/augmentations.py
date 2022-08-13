@@ -116,7 +116,7 @@ class PytorchVideoTrans:
         supported_pytorchvideo_trans = ('AugMix', 'RandAugment',
                                         'RandomResizedCrop', 'ShortSideScale',
                                         'RandomShortSideScale')
-        assert type in supported_pytorchvideo_trans,\
+        assert type in supported_pytorchvideo_trans, \
             f'PytorchVideo Transform {type} is not supported in MMAction2'
 
         self.trans = trans(**kwargs)
@@ -125,9 +125,9 @@ class PytorchVideoTrans:
     def __call__(self, results):
         assert 'imgs' in results
 
-        assert 'gt_bboxes' not in results,\
+        assert 'gt_bboxes' not in results, \
             f'PytorchVideo {self.type} doesn\'t support bboxes yet.'
-        assert 'proposals' not in results,\
+        assert 'proposals' not in results, \
             f'PytorchVideo {self.type} doesn\'t support bboxes yet.'
 
         if self.type in ('AugMix', 'RandAugment'):
@@ -891,7 +891,7 @@ class MultiScaleCrop(RandomCrop):
 
     def __init__(self,
                  input_size,
-                 scales=(1, ),
+                 scales=(1,),
                  max_wh_scale_gap=1,
                  random_crop=False,
                  num_fixed_crops=5,
@@ -1904,6 +1904,7 @@ class MelSpectrogram:
                     f'fixed_length={self.fixed_length})')
         return repr_str
 
+
 @PIPELINES.register_module()
 class Reverse:
     def __init__(self, reverse_ratio=0.5):
@@ -1916,6 +1917,7 @@ class Reverse:
 
     def __repr__(self):
         return f'{self.__class__.__name__}(reverse_ratio={self.reverse_ratio})'
+
 
 @PIPELINES.register_module()
 class Shift:
@@ -1931,12 +1933,13 @@ class Shift:
                 0: (-0.5 - np.clip(kp[0, :, :, m].min(), -0.5, 1), 0.5 - np.clip(kp[0, :, :, m].max(), -1, 0.5)),
                 1: (-0.5 - np.clip(kp[1, :, :, m].min(), -0.5, 1), 0.5 - np.clip(kp[1, :, :, m].max(), -1, 0.5)),
             }
-            for a in range(C-1):
+            for a in range(C - 1):
                 kp[a, :, :, m] += np.random.uniform(*intervals[a])
         return results
 
     def __repr__(self):
         return f'{self.__class__.__name__}(min_val={self.min_val}, max_val={self.max_val})'
+
 
 @PIPELINES.register_module()
 class Mirror:
@@ -1953,3 +1956,31 @@ class Mirror:
 
     def __repr__(self):
         return f'{self.__class__.__name__}(min_val={self.min_val}, max_val={self.max_val}, mirror_ratio={self.mirror_ratio})'
+
+
+@PIPELINES.register_module()
+class Splitter:
+    def __init__(self, sequence_length=200):
+        self.sequence_length = sequence_length
+
+    def __call__(self, results):
+        T = results['keypoint'].shape[1]
+        if T <= 0:
+            raise ValueError(f'T shouldn\'t be <= 0, yet is {T}')
+        if T <= self.sequence_length:
+            return results
+        s = random.randint(0, T - self.sequence_length)
+        t = s + self.sequence_length
+        results['keypoint'] = results['keypoint'][:, s:t]
+        results['keypoint_score'] = results['keypoint_score'][:, s:t]
+        results['total_frames'] = self.sequence_length
+        if 'child_detect' in results.keys():
+            results['child_detect'] = results['child_detect'][s:t]
+        if 'child_ids' in results.keys():
+            results['child_ids'] = results['child_ids'][s:t]
+        if t - s <= 0:
+            raise ValueError(f't-s shouldn\'t be <= 0, yet is {t - s}')
+        return results
+
+    def __repr__(self):
+        return f'{self.__class__.__name__}(sequence_length={self.sequence_length}'

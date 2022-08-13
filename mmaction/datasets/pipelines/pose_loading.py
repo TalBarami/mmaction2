@@ -706,34 +706,6 @@ class ChildDetect:
         results['keypoint_score'] = np.expand_dims([kps[cid, i] for i, cid in enumerate(cids)], axis=0)
         return results
 
-@PIPELINES.register_module()
-class Splitter:
-    def __init__(self, sequence_length=200):
-        self.sequence_length = sequence_length
-
-    def __call__(self, results):
-        T = results['keypoint'].shape[1]
-        if T <= 0:
-            raise ValueError(f'T shouldn\'t be <= 0, yet is {T}')
-        if T <= self.sequence_length:
-            return results
-        out = results.copy()
-        s = random.randint(0, T - self.sequence_length)
-        t = s + self.sequence_length
-        out['keypoint'] = results['keypoint'][:, s:t]
-        out['keypoint_score'] = results['keypoint_score'][:, s:t]
-        out['total_frames'] = self.sequence_length
-        if 'child_detect' in results.keys():
-            out['child_detect'] = results['child_detect'][s:t]
-        if 'child_ids' in results.keys():
-            out['child_ids'] = results['child_ids'][s:t]
-        if t-s <= 0:
-            raise ValueError(f't-s shouldn\'t be <= 0, yet is {t-s}')
-        return out
-
-    def __repr__(self):
-        return f'{self.__class__.__name__}(sequence_length={self.sequence_length}'
-
 # @PIPELINES.register_module()
 # class Splitter:
 #     def __init__(self, sequence_length=200, min_length=60):
