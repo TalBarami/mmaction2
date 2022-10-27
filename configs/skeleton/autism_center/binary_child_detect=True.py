@@ -92,7 +92,7 @@ test_pipeline = [
     dict(type='ToTensor', keys=['imgs'])
 ]
 data = dict(
-    videos_per_gpu=16,
+    videos_per_gpu=32,
     workers_per_gpu=2,
     test_dataloader=dict(videos_per_gpu=1),
     train=dict(
@@ -123,11 +123,11 @@ optimizer = dict(
 optimizer_config = dict(grad_clip=dict(max_norm=40, norm_type=2))
 # learning policy
 lr_config = dict(policy='step', step=[9, 11])
-total_epochs = 50
+total_epochs = 100
 checkpoint_config = dict(interval=1)
 workflow = [('train', 1)]
 evaluation = dict(
-    interval=1, metrics=['top_k_accuracy'], topk=(1))
+    interval=1, metrics=['top_k_accuracy', 'mean_class_accuracy'], topk=(1))
 log_config = dict(
     interval=100, hooks=[
         dict(type='TextLoggerHook'),

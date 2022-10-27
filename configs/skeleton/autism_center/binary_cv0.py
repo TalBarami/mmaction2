@@ -29,11 +29,12 @@ model = dict(
     test_cfg=dict(average_clips='prob'))
 
 dataset_type = 'PoseDataset'
-ann_file = r'D:\datasets\lancet_submission_data\train_dataset\child_detect=False\dataset_splits.pkl'
+ann_file = r'D:\data\lancet_submission\detection_splits.pkl'
 left_kp = [1, 3, 5, 7, 9, 11, 13, 15]
 right_kp = [2, 4, 6, 8, 10, 12, 14, 16]
 train_pipeline = [
-    dict(type='Splitter', sequence_length=200),
+    dict(type='ChildDetect'),
+    dict(type='Splitter', sequence_length=100),
     dict(type='UniformSampleFrames', clip_len=48),
     dict(type='PoseDecode'),
     dict(type='PoseCompact', hw_ratio=1., allow_imgpad=True),
@@ -52,7 +53,8 @@ train_pipeline = [
     dict(type='ToTensor', keys=['imgs', 'label'])
 ]
 val_pipeline = [
-    dict(type='Splitter', sequence_length=200),
+    dict(type='ChildDetect'),
+    dict(type='Splitter', sequence_length=100),
     dict(type='UniformSampleFrames', clip_len=48, num_clips=1, test_mode=True),
     dict(type='PoseDecode'),
     dict(type='PoseCompact', hw_ratio=1., allow_imgpad=True),
@@ -69,7 +71,8 @@ val_pipeline = [
     dict(type='ToTensor', keys=['imgs'])
 ]
 test_pipeline = [
-    dict(type='Splitter', sequence_length=200),
+    dict(type='ChildDetect'),
+    dict(type='Splitter', sequence_length=100),
     dict(type='UniformSampleFrames', clip_len=48, num_clips=10, test_mode=True),
     dict(type='PoseDecode'),
     dict(type='PoseCompact', hw_ratio=1., allow_imgpad=True),
@@ -89,7 +92,7 @@ test_pipeline = [
     dict(type='ToTensor', keys=['imgs'])
 ]
 data = dict(
-    videos_per_gpu=16,
+    videos_per_gpu=32,
     workers_per_gpu=2,
     test_dataloader=dict(videos_per_gpu=1),
     train=dict(
@@ -98,19 +101,19 @@ data = dict(
         dataset=dict(
             type=dataset_type,
             ann_file=ann_file,
-            split='train1',
+            split='train0',
             data_prefix='',
             pipeline=train_pipeline)),
     val=dict(
         type=dataset_type,
         ann_file=ann_file,
-        split='test1',
+        split='test0',
         data_prefix='',
         pipeline=val_pipeline),
     test=dict(
         type=dataset_type,
         ann_file=ann_file,
-        split='test1',
+        split='test0',
         data_prefix='',
         pipeline=test_pipeline))
 # optimizer
@@ -124,14 +127,14 @@ total_epochs = 50
 checkpoint_config = dict(interval=1)
 workflow = [('train', 1)]
 evaluation = dict(
-    interval=1, metrics=['top_k_accuracy'], topk=(1))
+    interval=1, metrics=['top_k_accuracy', 'mean_class_accuracy'], topk=(1))
 log_config = dict(
     interval=100, hooks=[
         dict(type='TextLoggerHook'),
     ])
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
-work_dir = './work_dirs/binary_lancet'  # noqa: E501
+work_dir = './work_dirs/detection_cv0'  # noqa: E501
 load_from = 'https://download.openmmlab.com/mmaction/skeleton/posec3d/k400_posec3d-041f49c6.pth'  # noqa: E501
 resume_from = None
 find_unused_parameters = True

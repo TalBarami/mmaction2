@@ -1960,7 +1960,7 @@ class Mirror:
 
 @PIPELINES.register_module()
 class Splitter:
-    def __init__(self, sequence_length=200):
+    def __init__(self, sequence_length):
         self.sequence_length = sequence_length
 
     def __call__(self, results):
