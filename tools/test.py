@@ -98,6 +98,12 @@ def parse_args():
         '--tensorrt',
         action='store_true',
         help='Whether to test with TensorRT engine or not')
+    parser.add_argument(
+        '--gpu-ids',
+        type=int,
+        nargs='+',
+        help='ids of gpus to use '
+             '(only applicable to non-distributed training)')
     args = parser.parse_args()
     if 'LOCAL_RANK' not in os.environ:
         os.environ['LOCAL_RANK'] = str(args.local_rank)
@@ -276,6 +282,8 @@ def main():
     cfg = Config.fromfile(args.config)
 
     cfg.merge_from_dict(args.cfg_options)
+    if args['gpu_ids'] is not None:
+        cfg['gpu_ids'] = args['gpu_ids']
 
     # set multi-process settings
     setup_multi_processes(cfg)
