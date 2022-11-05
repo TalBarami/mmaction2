@@ -282,8 +282,8 @@ def main():
     cfg = Config.fromfile(args.config)
 
     cfg.merge_from_dict(args.cfg_options)
-    if args['gpu_ids'] is not None:
-        cfg['gpu_ids'] = args['gpu_ids']
+    if args.gpu_ids is not None:
+        cfg['gpu_ids'] = args.gpu_ids
 
     # set multi-process settings
     setup_multi_processes(cfg)
